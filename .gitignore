@@ -1,0 +1,24 @@
+### FreePascal ###
+*.lps
+*.compiled
+*.[oa]
+*.ppu
+*.rst
+*.cgi
+*.exe
+*.log
+*.bak*
+fp.ini
+fp.cfg
+fp.dsk
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
+
+### SwinGame ###
+out.log
+/bin/
