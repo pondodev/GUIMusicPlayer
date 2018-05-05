@@ -1,5 +1,5 @@
 program GameMain;
-uses SwinGame, sgTypes, math;
+uses SwinGame, sgTypes, math, sysutils;
 
 type
     AlbumImage = record
@@ -9,7 +9,7 @@ type
         rectColor : Color;
         image : Bitmap;
     end;
-    AlbumImageArray = Array of AlbumImage;
+
     MenuLocation = (MainMenu, AlbumMenu);
 
     UIButton = record
@@ -18,6 +18,20 @@ type
         rectColor, outlineColor : Color;
         labelText : String;
     end;
+
+    Track = record
+        name, path : String;
+    end;
+    TrackArray = Array of Track;
+    MusicGenre = (ProgMetal, HipHop, Rock, Electropop);
+    Album = record
+        name, artist, path : String;
+        genre : MusicGenre;
+        trackCount : Integer;
+        tracks : TrackArray;
+        albumArt : AlbumImage;
+    end;
+    AlbumArray = Array of Album;
 
 procedure DrawAlbumImage(_img : AlbumImage);
 begin
@@ -39,30 +53,62 @@ begin
 end;
 
 // This procedure is most important when we want to make an album look "deselected"
-procedure ResetAlbumRectColours(var albumImages : AlbumImageArray);
+procedure ResetAlbumRectColours(var userAlbums : AlbumArray);
 var
     i : Integer;
 begin
     i := 0;
-    while i <= High(albumImages) do
+    while i <= High(userAlbums) do
     begin
-        albumImages[i].rectColor := ColorBlack;
+        userAlbums[i].albumArt.rectColor := ColorBlack;
         i += 1;
     end;
 end;
 
 // This is mostly used for initialisation purposes
-procedure ResetAlbumRectWidthHeight(var albumImages : AlbumImageArray);
+procedure ResetAlbumRectWidthHeight(var userAlbums : AlbumArray);
 var
     i : Integer;
 begin
     i := 0;
-    while i <= High(albumImages) do
+    while i <= High(userAlbums) do
     begin
-        albumImages[i].rectWidth := 206;
-        albumImages[i].rectHeight := 202;
+        userAlbums[i].albumArt.rectWidth := 206;
+        userAlbums[i].albumArt.rectHeight := 202;
         i += 1;
     end;
+end;
+
+function SetAlbumImagePosition(albImg : AlbumImage; locX, locY : Integer) : AlbumImage;
+begin
+    albImg.imgLocX := locX;
+    albImg.imgLocY := locY;
+    albImg.rectLocX := locX - 5;
+    albImg.rectLocY := locY - 1;
+    result := albImg;
+end;
+
+procedure ResetAlbumImageDefaults(var userAlbums : AlbumArray);
+begin
+    userAlbums[0].albumArt.imgLocX := 15;
+    userAlbums[0].albumArt.imgLocY := 10;
+    userAlbums[0].albumArt.rectLocX := 10;
+    userAlbums[0].albumArt.rectLocY := 9;
+
+    userAlbums[1].albumArt.imgLocX := userAlbums[0].albumArt.imgLocX + 230;
+    userAlbums[1].albumArt.imgLocY := userAlbums[0].albumArt.imgLocY;
+    userAlbums[1].albumArt.rectLocX := userAlbums[0].albumArt.rectLocX + 230;
+    userAlbums[1].albumArt.rectLocY := userAlbums[0].albumArt.rectLocY;
+
+    userAlbums[2].albumArt.imgLocX := userAlbums[0].albumArt.imgLocX;
+    userAlbums[2].albumArt.imgLocY := userAlbums[0].albumArt.imgLocY + 225;
+    userAlbums[2].albumArt.rectLocX := userAlbums[0].albumArt.rectLocX;
+    userAlbums[2].albumArt.rectLocY := userAlbums[0].albumArt.rectLocY + 225;
+
+    userAlbums[3].albumArt.imgLocX := userAlbums[2].albumArt.imgLocX + 230;
+    userAlbums[3].albumArt.imgLocY := userAlbums[2].albumArt.imgLocY;
+    userAlbums[3].albumArt.rectLocX := userAlbums[2].albumArt.rectLocX + 230;
+    userAlbums[3].albumArt.rectLocY := userAlbums[2].albumArt.rectLocY;
 end;
 
 function CheckButtonIsHovered(_btn : UIButton) : Boolean;
@@ -76,41 +122,55 @@ begin
 end;
 
 // Load all the assets into the program before we continue. MUST BE CALLED FIRST THING!
-procedure LoadAssets(var albumImages : AlbumImageArray; var backButton : UIButton);
+procedure LoadAssets(var userAlbums : AlbumArray; var backButton : UIButton);
+var
+    tempString : String;
+    albumDataFile : TextFile;
+    i, a : Integer;
 begin
-    SetLength(albumImages, 4);
+    SetLength(userAlbums, 4);
 
-    // Load Saturation
-    albumImages[0].imgLocX := 15;
-    albumImages[0].imgLocY := 10;
-    albumImages[0].rectLocX := 10;
-    albumImages[0].rectLocY := 9;
-    albumImages[0].image := LoadBitmap('saturation.jpg');
+    // Load images
+    userAlbums[0].albumArt.image := LoadBitmap('whobitthemoon.jpg');
+    userAlbums[1].albumArt.image := LoadBitmap('saturation.jpg');
+    userAlbums[2].albumArt.image := LoadBitmap('vessels.jpg');
+    userAlbums[3].albumArt.image := LoadBitmap('dontsmileatme.jpg');
 
-    // Load don't smile at me
-    albumImages[1].imgLocX := albumImages[0].imgLocX + 230;
-    albumImages[1].imgLocY := albumImages[0].imgLocY;
-    albumImages[1].rectLocX := albumImages[0].rectLocX + 230;
-    albumImages[1].rectLocY := albumImages[0].rectLocY;
-    albumImages[1].image := LoadBitmap('dontsmileatme.jpg');
-
-    // Load Vessels
-    albumImages[2].imgLocX := albumImages[0].imgLocX;
-    albumImages[2].imgLocY := albumImages[0].imgLocY + 225;
-    albumImages[2].rectLocX := albumImages[0].rectLocX;
-    albumImages[2].rectLocY := albumImages[0].rectLocY + 225;
-    albumImages[2].image := LoadBitmap('vessels.jpg');
-
-    // Load Who Bit the Moon
-    albumImages[3].imgLocX := albumImages[2].imgLocX + 230;
-    albumImages[3].imgLocY := albumImages[2].imgLocY;
-    albumImages[3].rectLocX := albumImages[2].rectLocX + 230;
-    albumImages[3].rectLocY := albumImages[2].rectLocY;
-    albumImages[3].image := LoadBitmap('whobitthemoon.jpg');
+    ResetAlbumImageDefaults(userAlbums);
 
     // Set generic values
-    ResetAlbumRectColours(albumImages);
-    ResetAlbumRectWidthHeight(albumImages);
+    ResetAlbumRectColours(userAlbums);
+    ResetAlbumRectWidthHeight(userAlbums);
+
+    // Prepare album data file for reading
+    AssignFile(albumDataFile, 'albums.dat');
+    Reset(albumDataFile);
+
+    // Iterate through each album and assign relevant info
+    i := 0;
+    while i <= High(userAlbums) do
+    begin
+        ReadLn(albumDataFile, userAlbums[i].name);
+        ReadLn(albumDataFile, userAlbums[i].artist);
+        ReadLn(albumDataFile, tempString);
+        userAlbums[i].genre := MusicGenre(StrToInt(tempString));
+        ReadLn(albumDataFile, tempString);
+        userAlbums[i].trackCount := StrToInt(tempString);
+        ReadLn(albumDataFile, userAlbums[i].path);
+
+        // Loop through to add all tracks
+        a := 0;
+        SetLength(userAlbums[i].tracks, userAlbums[i].trackCount);
+        while a < userAlbums[i].trackCount do
+        begin
+            ReadLn(albumDataFile, userAlbums[i].tracks[a].name);
+            ReadLn(albumDataFile, userAlbums[i].tracks[a].path);
+            a += 1;
+        end;
+
+        i +=1;
+    end;
+    Close(albumDataFile); // Close file once we're done with it
 
     // UI Buttons
     backButton.rectLocX := 550;
@@ -123,7 +183,7 @@ begin
 end;
 
 // Handle all drawing for the main menu here
-procedure DrawMainMenu(albumImages : AlbumImageArray; albumSelection : Integer);
+procedure DrawMainMenu(userAlbums : AlbumArray; albumSelection : Integer);
 var
     i : Integer;
     infoText : String;
@@ -131,48 +191,46 @@ begin
     // Show the user if they have hovered over an album and are able to click it
     if albumSelection >= 0 then
     begin
-        albumImages[albumSelection].rectColor := ColorGrey;
+        userAlbums[albumSelection].albumArt.rectColor := ColorGrey;
     end
     else
     begin
-        ResetAlbumRectColours(albumImages);
+        ResetAlbumRectColours(userAlbums);
     end;
 
     // Display all albums
     i := 0;
-    while i <= (High(albumImages)) do
+    while i <= (High(userAlbums)) do
     begin
-        DrawAlbumImage(albumImages[i]);
+        DrawAlbumImage(userAlbums[i].albumArt);
         i += 1;
     end;
     DrawText('playing music is my passion.', ColorBlack, 450, 650);
 
     // Display information on any album that has been hovered over
-    infoText := 'Hover over an album for more info';
-    case albumSelection of
-        0 : infoText := 'SATURATION - BROCKHAMPTON';
-        1 : infoText := 'don''t smile at me - Billie Eilish';
-        2 : infoText := 'Vessels - Starset';
-        3 : infoText := 'Who Bit the Moon - David Maxim Micic';
-    end;
+    if albumSelection >= 0 then
+        infoText := userAlbums[albumSelection].name + ' - ' + userAlbums[albumSelection].artist
+    else
+        infoText := 'Select an album';
+
     DrawText(infoText, ColorBlack, 10, 500);
 end;
 
 // Handle all inputs for the main menu here
-procedure CheckMainMenuInput(albImgs : AlbumImageArray; var albumSelection : Integer; var currentMenu : MenuLocation);
+procedure CheckMainMenuInput(userAlbums : AlbumArray; var albumSelection : Integer; var currentMenu : MenuLocation);
 var
     i : Integer;
 begin
     albumSelection := -1;
     i := 0;
-    while i <= High(albImgs) do
+    while i <= High(userAlbums) do
     begin
         // Check to see if there is an album being hovered over
         if PointInRect
         (
             MouseX(), MouseY(),
-            albImgs[i].rectLocX, albImgs[i].rectLocY,
-            albImgs[i].rectWidth, albImgs[i].rectHeight
+            userAlbums[i].albumArt.rectLocX, userAlbums[i].albumArt.rectLocY,
+            userAlbums[i].albumArt.rectWidth, userAlbums[i].albumArt.rectHeight
         ) then albumSelection := i;
 
         // Check if the album that is being hovered over has been clicked
@@ -183,9 +241,14 @@ begin
 end;
 
 // Handle all drawing for the album menu here
-procedure DrawAlbumMenu(backButton : UIButton);
+procedure DrawAlbumMenu(backButton : UIButton; albImg : AlbumImage);
 begin
     DrawUIButton(backButton);
+
+    // Move the album image into the top left corner
+    albImg := SetAlbumImagePosition(albImg, 15, 10);
+    albImg.rectColor := ColorBlack;
+    DrawAlbumImage(albImg);
 end;
 
 // Handle all the inputs for the album menu here
@@ -200,13 +263,14 @@ procedure Main();
 var
     // Universal
     albumImages : AlbumImageArray;
+    userAlbums : AlbumArray;
     albumSelection : Integer;
     currentMenu : MenuLocation;
     // Album Menu
     backButton : UIButton;
 begin
     OpenGraphicsWindow('playing music is my passion', 700, 700);
-    LoadAssets(albumImages, backButton);
+    LoadAssets(userAlbums, backButton);
     currentMenu := MainMenu;
     
     repeat // The game loop...
@@ -215,13 +279,13 @@ begin
         // Start drawing everyting
         if currentMenu = MainMenu then
         begin
-            CheckMainMenuInput(albumImages, albumSelection, currentMenu);
-            DrawMainMenu(albumImages, albumSelection);
+            CheckMainMenuInput(userAlbums, albumSelection, currentMenu);
+            DrawMainMenu(userAlbums, albumSelection);
         end
         else if currentMenu = AlbumMenu then
         begin
             CheckAlbumMenuInput(currentMenu, backButton);
-            DrawAlbumMenu(backButton);
+            DrawAlbumMenu(backButton, userAlbums[albumSelection].albumArt);
         end;
         
         RefreshScreen(60);
