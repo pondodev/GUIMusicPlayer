@@ -262,7 +262,6 @@ end;
 procedure Main();
 var
     // Universal
-    albumImages : AlbumImageArray;
     userAlbums : AlbumArray;
     albumSelection : Integer;
     currentMenu : MenuLocation;
