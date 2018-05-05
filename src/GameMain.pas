@@ -241,14 +241,34 @@ begin
 end;
 
 // Handle all drawing for the album menu here
-procedure DrawAlbumMenu(backButton : UIButton; albImg : AlbumImage);
+procedure DrawAlbumMenu(backButton : UIButton; userAlbum : Album);
+var
+    tempString : String;
+    i, trackTextLocY : Integer;
 begin
     DrawUIButton(backButton);
 
     // Move the album image into the top left corner
-    albImg := SetAlbumImagePosition(albImg, 15, 10);
-    albImg.rectColor := ColorBlack;
-    DrawAlbumImage(albImg);
+    userAlbum.albumArt := SetAlbumImagePosition(userAlbum.albumArt, 15, 10);
+    userAlbum.albumArt.rectColor := ColorBlack;
+    DrawAlbumImage(userAlbum.albumArt);
+
+    // Draw all the related album info below the album
+    DrawText('Album: ' + userAlbum.name, ColorBlack, 10, 225);
+    DrawText('Artist: ' + userAlbum.artist, ColorBlack, 10, 240);
+    Str(userAlbum.genre, tempString);
+    DrawText('Genre: ' + tempString, ColorBlack, 10, 255);
+    DrawText('Number of tracks: ' + IntToStr(userAlbum.trackCount), ColorBlack, 10, 270);
+
+    i := 0;
+    trackTextLocY := 10;
+    // Draw all the track names
+    while i < userAlbum.trackCount do
+    begin
+        DrawText(IntToStr(i + 1) + '. ' + userAlbum.tracks[i].name, ColorBlack, 300, trackTextLocY);
+        i += 1;
+        trackTextLocY += 15;
+    end;
 end;
 
 // Handle all the inputs for the album menu here
@@ -284,7 +304,7 @@ begin
         else if currentMenu = AlbumMenu then
         begin
             CheckAlbumMenuInput(currentMenu, backButton);
-            DrawAlbumMenu(backButton, userAlbums[albumSelection].albumArt);
+            DrawAlbumMenu(backButton, userAlbums[albumSelection]);
         end;
         
         RefreshScreen(60);
