@@ -21,6 +21,7 @@ type
 
     Track = record
         name, path : String;
+        doot : Music;
     end;
     TrackArray = Array of Track;
     MusicGenre = (ProgMetal, Remix, Rock, Electropop);
@@ -165,6 +166,7 @@ begin
         begin
             ReadLn(albumDataFile, userAlbums[i].tracks[a].name);
             ReadLn(albumDataFile, userAlbums[i].tracks[a].path);
+            userAlbums[i].tracks[a].doot := LoadMusic(userAlbums[i].path + userAlbums[i].tracks[a].path);
             a += 1;
         end;
 
@@ -283,7 +285,7 @@ procedure Main();
 var
     // Universal
     userAlbums : AlbumArray;
-    albumSelection : Integer;
+    albumSelection, i, a : Integer;
     currentMenu : MenuLocation;
     // Album Menu
     backButton : UIButton;
@@ -309,6 +311,28 @@ begin
         
         RefreshScreen(60);
     until WindowCloseRequested();
+
+    // Release all assets before exiting
+    CloseAudio();
+
+    i := 0;
+    a := 0;
+    while i <= High(userAlbums) do
+    begin
+        while a < userAlbums[i].trackCount do
+        begin
+            FreeMusic(userAlbums[i].tracks[a].doot);
+            a += 1;
+        end;
+        i += 1;
+    end;
+
+    i := 0;
+    while i <= High(userAlbums) do
+    begin
+        FreeBitmap(userAlbums[i].albumArt.image);
+        i += 1;
+    end;
 end;
 
 begin
