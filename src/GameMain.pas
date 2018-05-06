@@ -182,7 +182,7 @@ begin
 
     // UI Buttons
     backButton.rectLocX := 550;
-    backButton.rectLocY := 600;
+    backButton.rectLocY := 350;
     backButton.rectWidth := 80;
     backButton.rectHeight := 30;
     backButton.rectColor := ColorGrey;
@@ -221,7 +221,7 @@ begin
         DrawAlbumImage(userAlbums[i].albumArt);
         i += 1;
     end;
-    DrawText('playing music is my passion.', ColorBlack, 450, 650);
+    DrawText('playing music is my passion.', ColorBlack, 460, 480);
 
     // Display information on any album that has been hovered over
     if albumSelection >= 0 then
@@ -229,7 +229,7 @@ begin
     else
         infoText := 'Select an album';
 
-    DrawText(infoText, ColorBlack, 10, 500);
+    DrawText(infoText, ColorBlack, 10, 480);
 end;
 
 // Handle all inputs for the main menu here
@@ -324,7 +324,7 @@ var
     // Album Menu
     backButton, playAlbumButton : UIButton;
 begin
-    OpenGraphicsWindow('playing music is my passion', 700, 700);
+    OpenGraphicsWindow('playing music is my passion', 700, 500);
     LoadAssets(userAlbums, backButton, playAlbumButton);
     OpenAudio();
     currentMenu := MainMenu;
