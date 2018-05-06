@@ -23,7 +23,7 @@ type
         name, path : String;
     end;
     TrackArray = Array of Track;
-    MusicGenre = (ProgMetal, HipHop, Rock, Electropop);
+    MusicGenre = (ProgMetal, Remix, Rock, Electropop);
     Album = record
         name, artist, path : String;
         genre : MusicGenre;
@@ -132,7 +132,7 @@ begin
 
     // Load images
     userAlbums[0].albumArt.image := LoadBitmap('whobitthemoon.jpg');
-    userAlbums[1].albumArt.image := LoadBitmap('saturation.jpg');
+    userAlbums[1].albumArt.image := LoadBitmap('allday.jpg');
     userAlbums[2].albumArt.image := LoadBitmap('vessels.jpg');
     userAlbums[3].albumArt.image := LoadBitmap('dontsmileatme.jpg');
 
