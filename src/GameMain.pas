@@ -129,7 +129,7 @@ begin
 end;
 
 // Load all the assets into the program before we continue. MUST BE CALLED FIRST THING!
-procedure LoadAssets(var userAlbums : AlbumArray; var backButton, playAlbumButton : UIButton);
+procedure LoadAssets(var userAlbums : AlbumArray; var backButton, playAlbumButton, playButton, pauseButton : UIButton);
 var
     tempString : String;
     albumDataFile : TextFile;
@@ -181,8 +181,8 @@ begin
     Close(albumDataFile); // Close file once we're done with it
 
     // UI Buttons
-    backButton.rectLocX := 550;
-    backButton.rectLocY := 350;
+    backButton.rectLocX := 600;
+    backButton.rectLocY := 450;
     backButton.rectWidth := 80;
     backButton.rectHeight := 30;
     backButton.rectColor := ColorGrey;
@@ -196,6 +196,22 @@ begin
     playAlbumButton.rectColor := ColorGrey;
     playAlbumButton.outlineColor := ColorBlack;
     playAlbumButton.labelText := 'Play Album';
+
+    playButton.rectLocX := 15;
+    playButton.rectLocY := 390;
+    playButton.rectWidth := 100;
+    playButton.rectHeight := 20;
+    playButton.rectColor := ColorGrey;
+    playButton.outlineColor := ColorBlack;
+    playButton.labelText := 'Play';
+
+    pauseButton.rectLocX := playButton.rectLocX;
+    pauseButton.rectLocY := playButton.rectLocY;
+    pauseButton.rectWidth := playButton.rectWidth;
+    pauseButton.rectHeight := playButton.rectHeight;
+    pauseButton.rectColor := playButton.rectColor;
+    pauseButton.outlineColor := playButton.outlineColor;
+    pauseButton.labelText := 'Pause';
 end;
 
 // Handle all drawing for the main menu here
@@ -257,13 +273,15 @@ begin
 end;
 
 // Handle all drawing for the album menu here
-procedure DrawAlbumMenu(backButton, playAlbumButton : UIButton; userAlbum : Album);
+procedure DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton : UIButton; userAlbum : Album; musicPaused : Boolean);
 var
     tempString : String;
     i, trackTextLocY : Integer;
 begin
     DrawUIButton(backButton);
     DrawUIButton(playAlbumButton);
+    if musicPaused then DrawUIButton(playButton)
+    else DrawUIButton(pauseButton);
 
     // Move the album image into the top left corner
     userAlbum.albumArt := SetAlbumImagePosition(userAlbum.albumArt, 15, 10);
@@ -302,33 +320,50 @@ begin
 end;
 
 // Handle all the inputs for the album menu here
-procedure CheckAlbumMenuInput(var currentMenu : MenuLocation; var currentTrack: Integer; userAlbum : Album; var backButton, playAlbumButton : UIButton);
+procedure CheckAlbumMenuInput(var currentMenu : MenuLocation; var currentTrack: Integer; var musicPaused : Boolean; userAlbum : Album; var backButton, playAlbumButton, playButton, pauseButton : UIButton);
 begin
     ButtonHoverVisual(backButton);
     ButtonHoverVisual(playAlbumButton);
+    ButtonHoverVisual(playButton);
+    ButtonHoverVisual(pauseButton);
 
     // Check if we're clicking on any of the UI buttons
     if (CheckButtonIsHovered(backButton)) and (MouseClicked(LeftButton)) then currentMenu := MainMenu;
     if (CheckButtonIsHovered(playAlbumButton)) and (MouseClicked(LeftButton)) then currentTrack := 0;
 
+    // Play/pause music functionality
+    if musicPaused then
+    begin
+        if (CheckButtonIsHovered(playButton)) and (MouseClicked(LeftButton)) then musicPaused := false;
+        PauseMusic();
+    end
+    else
+    begin
+        if (CheckButtonIsHovered(pauseButton)) and (MouseClicked(LeftButton)) then musicPaused := true;
+        ResumeMusic();
+    end;
+
     // Check if we've set up to play any tracks
-    if currentTrack >= 0 then PlayAlbum(userAlbum, currentTrack);
+    if (currentTrack >= 0) and (not musicPaused) then PlayAlbum(userAlbum, currentTrack);
 end;
 
 procedure Main();
 var
     // Universal
     userAlbums : AlbumArray;
-    albumSelection, i, a, currentTrack : Integer;
+    albumSelection, i, a : Integer;
     currentMenu : MenuLocation;
     // Album Menu
-    backButton, playAlbumButton : UIButton;
+    backButton, playAlbumButton, playButton, pauseButton : UIButton;
+    currentTrack : Integer;
+    musicPaused : Boolean;
 begin
     OpenGraphicsWindow('playing music is my passion', 700, 500);
-    LoadAssets(userAlbums, backButton, playAlbumButton);
+
+    // Initialise assets and variables
+    LoadAssets(userAlbums, backButton, playAlbumButton, playButton, pauseButton);
     OpenAudio();
     currentMenu := MainMenu;
-    currentTrack := -1;
     albumSelection := 0;
     
     repeat // The game loop...
@@ -340,13 +375,14 @@ begin
             // We need to stop the music and set currentTrack to -1 so we reset all playback
             StopMusic();
             currentTrack := -1;
+            musicPaused := false;
             CheckMainMenuInput(userAlbums, albumSelection, currentMenu);
             DrawMainMenu(userAlbums, albumSelection);
         end
         else if currentMenu = AlbumMenu then
         begin
-            CheckAlbumMenuInput(currentMenu, currentTrack, userAlbums[albumSelection], backButton, playAlbumButton);
-            DrawAlbumMenu(backButton, playAlbumButton, userAlbums[albumSelection]);
+            CheckAlbumMenuInput(currentMenu, currentTrack, musicPaused, userAlbums[albumSelection], backButton, playAlbumButton, playButton, pauseButton);
+            DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton, userAlbums[albumSelection], musicPaused);
         end;
         
         RefreshScreen(60);
