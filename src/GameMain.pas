@@ -124,12 +124,13 @@ end;
 
 procedure ButtonHoverVisual(var _btn : UIButton);
 begin
-    if CheckButtonIsHovered(_btn) then _btn.outlineColor := ColorLightGrey
+    if (CheckButtonIsHovered(_btn)) and (MouseDown(LeftButton)) then _btn.outlineColor := ColorPurple
+    else if CheckButtonIsHovered(_btn) then _btn.outlineColor := ColorLightGrey
     else _btn.outlineColor := ColorBlack;
 end;
 
 // Load all the assets into the program before we continue. MUST BE CALLED FIRST THING!
-procedure LoadAssets(var userAlbums : AlbumArray; var backButton, playAlbumButton, playButton, pauseButton : UIButton);
+procedure LoadAssets(var userAlbums : AlbumArray; var backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton : UIButton);
 var
     tempString : String;
     albumDataFile : TextFile;
@@ -212,6 +213,22 @@ begin
     pauseButton.rectColor := playButton.rectColor;
     pauseButton.outlineColor := playButton.outlineColor;
     pauseButton.labelText := 'Pause';
+
+    nextTrackButton.rectLocX := 15;
+    nextTrackButton.rectLocY := 420;
+    nextTrackButton.rectWidth := 100;
+    nextTrackButton.rectHeight := 20;
+    nextTrackButton.rectColor := ColorGrey;
+    nextTrackButton.outlineColor := ColorBlack;
+    nextTrackButton.labelText := 'Next';
+    
+    previousTrackButton.rectLocX := 15;
+    previousTrackButton.rectLocY := 450;
+    previousTrackButton.rectWidth := 100;
+    previousTrackButton.rectHeight := 20;
+    previousTrackButton.rectColor := ColorGrey;
+    previousTrackButton.outlineColor := ColorBlack;
+    previousTrackButton.labelText := 'Previous';
 end;
 
 // Handle all drawing for the main menu here
@@ -223,7 +240,8 @@ begin
     // Show the user if they have hovered over an album and are able to click it
     if albumSelection >= 0 then
     begin
-        userAlbums[albumSelection].albumArt.rectColor := ColorGrey;
+        if MouseDown(LeftButton) then userAlbums[albumSelection].albumart.rectColor := ColorPurple
+        else userAlbums[albumSelection].albumArt.rectColor := ColorGrey;
     end
     else
     begin
@@ -273,13 +291,15 @@ begin
 end;
 
 // Handle all drawing for the album menu here
-procedure DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton : UIButton; userAlbum : Album; musicPaused : Boolean; currentTrack : Integer);
+procedure DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton : UIButton; userAlbum : Album; musicPaused : Boolean; currentTrack : Integer);
 var
     tempString : String;
     i, trackTextLocY : Integer;
 begin
     DrawUIButton(backButton);
     DrawUIButton(playAlbumButton);
+    DrawUIButton(nextTrackButton);
+    DrawUIButton(previousTrackButton);
     if musicPaused then DrawUIButton(playButton)
     else DrawUIButton(pauseButton);
 
@@ -315,21 +335,26 @@ begin
     // Check if we have reached the end of the current song
     if (currentTrack >= 0) and (not MusicPlaying()) then
     begin
-        // Play song and set current track to the next song
-        PlayMusic(userAlbum.tracks[currentTrack].doot, 1);
-        currentTrack += 1;
-        // If we're at the end of the album then set the current track to -1 so we don't loop
-        if currentTrack = userAlbum.trackCount then currentTrack := -1;
+        // Check if we are at the end of the album
+        if currentTrack = userAlbum.trackCount then currentTrack := -1
+        else
+        begin
+            // Play song and set current track to the next song
+            PlayMusic(userAlbum.tracks[currentTrack].doot, 1);
+            currentTrack += 1;
+        end;
     end;
 end;
 
 // Handle all the inputs for the album menu here
-procedure CheckAlbumMenuInput(var currentMenu : MenuLocation; var currentTrack: Integer; var musicPaused : Boolean; userAlbum : Album; var backButton, playAlbumButton, playButton, pauseButton : UIButton);
+procedure CheckAlbumMenuInput(var currentMenu : MenuLocation; var currentTrack: Integer; var musicPaused : Boolean; userAlbum : Album; var backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton : UIButton);
 begin
     ButtonHoverVisual(backButton);
     ButtonHoverVisual(playAlbumButton);
     ButtonHoverVisual(playButton);
     ButtonHoverVisual(pauseButton);
+    ButtonHoverVisual(nextTrackButton);
+    ButtonHoverVisual(previousTrackButton);
 
     // Check if we're clicking on any of the UI buttons
     if (CheckButtonIsHovered(backButton)) and (MouseClicked(LeftButton)) then currentMenu := MainMenu;
@@ -347,6 +372,43 @@ begin
         ResumeMusic();
     end;
 
+    // NOTE: Both moving forwards or backwards out of the bounds of the album will
+    //       force the program to stop all music playback
+    // Move forward one track
+    if (CheckButtonIsHovered(nextTrackButton)) and (MouseClicked(LeftButton)) then
+    begin
+        if currentTrack = userAlbum.trackCount then
+        begin
+            currentTrack := -1;
+            StopMusic();
+        end
+        else if currentTrack = -1 then
+        begin
+            currentTrack := 0;
+        end
+        else
+        begin
+            PlayMusic(userAlbum.tracks[currentTrack].doot, 1);
+            currentTrack += 1;
+        end;
+    end;
+
+    // Move backwards one track
+    if (CheckButtonIsHovered(previousTrackButton)) and (MouseClicked(LeftButton)) then
+    begin
+        if currentTrack = 1 then
+        begin
+            currentTrack := -1;
+            StopMusic();
+        end
+        else if currentTrack > 1 then
+        begin
+            currentTrack -= 2;
+            PlayMusic(userAlbum.tracks[currentTrack].doot, 1);
+            currentTrack += 1;
+        end;
+    end;
+
     // Check if we've set up to play any tracks
     if (currentTrack >= 0) and (not musicPaused) then PlayAlbum(userAlbum, currentTrack);
 end;
@@ -358,14 +420,14 @@ var
     albumSelection, i, a : Integer;
     currentMenu : MenuLocation;
     // Album Menu
-    backButton, playAlbumButton, playButton, pauseButton : UIButton;
+    backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton : UIButton;
     currentTrack : Integer;
     musicPaused : Boolean;
 begin
     OpenGraphicsWindow('playing music is my passion', 700, 500);
 
     // Initialise assets and variables
-    LoadAssets(userAlbums, backButton, playAlbumButton, playButton, pauseButton);
+    LoadAssets(userAlbums, backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton);
     OpenAudio();
     currentMenu := MainMenu;
     albumSelection := 0;
@@ -385,11 +447,11 @@ begin
         end
         else if currentMenu = AlbumMenu then
         begin
-            CheckAlbumMenuInput(currentMenu, currentTrack, musicPaused, userAlbums[albumSelection], backButton, playAlbumButton, playButton, pauseButton);
-            DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton, userAlbums[albumSelection], musicPaused, currentTrack);
+            CheckAlbumMenuInput(currentMenu, currentTrack, musicPaused, userAlbums[albumSelection], backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton);
+            DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, userAlbums[albumSelection], musicPaused, currentTrack);
         end;
         
-        RefreshScreen(10);
+        RefreshScreen(60);
     until WindowCloseRequested();
 
     // Release all assets before exiting
