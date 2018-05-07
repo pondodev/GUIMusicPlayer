@@ -273,7 +273,7 @@ begin
 end;
 
 // Handle all drawing for the album menu here
-procedure DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton : UIButton; userAlbum : Album; musicPaused : Boolean);
+procedure DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton : UIButton; userAlbum : Album; musicPaused : Boolean; currentTrack : Integer);
 var
     tempString : String;
     i, trackTextLocY : Integer;
@@ -294,6 +294,10 @@ begin
     Str(userAlbum.genre, tempString);
     DrawText('Genre: ' + tempString, ColorBlack, 10, 255);
     DrawText('Number of tracks: ' + IntToStr(userAlbum.trackCount), ColorBlack, 10, 270);
+
+    // Draw what is now playing if music is playing
+    if MusicPlaying() then
+        DrawText('Now playing: ' + userAlbum.tracks[currentTrack - 1].name, RandomRGBColor(255), 10, 285);
 
     i := 0;
     trackTextLocY := 10;
@@ -382,10 +386,10 @@ begin
         else if currentMenu = AlbumMenu then
         begin
             CheckAlbumMenuInput(currentMenu, currentTrack, musicPaused, userAlbums[albumSelection], backButton, playAlbumButton, playButton, pauseButton);
-            DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton, userAlbums[albumSelection], musicPaused);
+            DrawAlbumMenu(backButton, playAlbumButton, playButton, pauseButton, userAlbums[albumSelection], musicPaused, currentTrack);
         end;
         
-        RefreshScreen(60);
+        RefreshScreen(10);
     until WindowCloseRequested();
 
     // Release all assets before exiting
