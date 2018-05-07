@@ -130,6 +130,17 @@ begin
     else _btn.outlineColor := ColorBlack;
 end;
 
+function CreateUIButton(x, y, width, height : Integer; rectColor, outlineColor: Color; labelText : String) : UIButton;
+begin
+    result.rectLocX := x;
+    result.rectLocY := y;
+    result.rectWidth := width;
+    result.rectHeight := height;
+    result.rectColor := rectColor;
+    result.outlineColor := outlineColor;
+    result.labelText := labelText;
+end;
+
 // Load all the assets into the program before we continue. MUST BE CALLED FIRST THING!
 procedure LoadAssets(var userAlbums : AlbumArray; var backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton : UIButton);
 var
@@ -179,53 +190,17 @@ begin
     ResetAlbumImageDefaults(userAlbums);
 
     // UI Buttons
-    backButton.rectLocX := 600;
-    backButton.rectLocY := 450;
-    backButton.rectWidth := 80;
-    backButton.rectHeight := 30;
-    backButton.rectColor := ColorGrey;
-    backButton.outlineColor := ColorBlack;
-    backButton.labelText := 'Back';
-
-    playAlbumButton.rectLocX := 15;
-    playAlbumButton.rectLocY := 350;
-    playAlbumButton.rectWidth := 100;
-    playAlbumButton.rectHeight := 30;
-    playAlbumButton.rectColor := ColorGrey;
-    playAlbumButton.outlineColor := ColorBlack;
-    playAlbumButton.labelText := 'Play Album';
-
-    playButton.rectLocX := 15;
-    playButton.rectLocY := 390;
-    playButton.rectWidth := 100;
-    playButton.rectHeight := 20;
-    playButton.rectColor := ColorGrey;
-    playButton.outlineColor := ColorBlack;
-    playButton.labelText := 'Play';
-
-    pauseButton.rectLocX := playButton.rectLocX;
-    pauseButton.rectLocY := playButton.rectLocY;
-    pauseButton.rectWidth := playButton.rectWidth;
-    pauseButton.rectHeight := playButton.rectHeight;
-    pauseButton.rectColor := playButton.rectColor;
-    pauseButton.outlineColor := playButton.outlineColor;
-    pauseButton.labelText := 'Pause';
-
-    nextTrackButton.rectLocX := 15;
-    nextTrackButton.rectLocY := 420;
-    nextTrackButton.rectWidth := 100;
-    nextTrackButton.rectHeight := 20;
-    nextTrackButton.rectColor := ColorGrey;
-    nextTrackButton.outlineColor := ColorBlack;
-    nextTrackButton.labelText := 'Next';
-    
-    previousTrackButton.rectLocX := 15;
-    previousTrackButton.rectLocY := 450;
-    previousTrackButton.rectWidth := 100;
-    previousTrackButton.rectHeight := 20;
-    previousTrackButton.rectColor := ColorGrey;
-    previousTrackButton.outlineColor := ColorBlack;
-    previousTrackButton.labelText := 'Previous';
+    backButton := CreateUIButton(600, 450, 80, 30, ColorGrey, ColorBlack, 'Back');
+    playAlbumButton := CreateUIButton(15, 350, 100, 30, ColorGrey, ColorBlack, 'Play Album');
+    playButton := CreateUIButton(15, 390, 100, 20, ColorGrey, ColorBlack, 'Play');
+    pauseButton := CreateUIButton
+    (
+        playButton.rectLocX, playButton.rectLocY,
+        playButton.rectWidth, playButton.rectHeight,
+        playButton.rectColor, playButton.outlineColor, 'Pause'
+    );
+    nextTrackButton := CreateUIButton(15, 420, 100, 20, ColorGrey, ColorBlack, 'Next');
+    previousTrackButton := CreateUIButton(15, 450, 100, 20, ColorGrey, ColorBlack, 'Previous');
 end;
 
 // Handle all drawing for the main menu here
