@@ -7,6 +7,7 @@ type
         rectLocX, rectLocY : Integer;
         rectWidth, rectHeight : Integer;
         rectColor : Color;
+        imagePath : String;
         image : Bitmap;
     end;
 
@@ -138,14 +139,6 @@ var
 begin
     SetLength(userAlbums, 4);
 
-    // Load images
-    userAlbums[0].albumArt.image := LoadBitmap('whobitthemoon.jpg');
-    userAlbums[1].albumArt.image := LoadBitmap('allday.jpg');
-    userAlbums[2].albumArt.image := LoadBitmap('vessels.jpg');
-    userAlbums[3].albumArt.image := LoadBitmap('dontsmileatme.jpg');
-
-    ResetAlbumImageDefaults(userAlbums);
-
     // Set generic values
     ResetAlbumRectColours(userAlbums);
     ResetAlbumRectWidthHeight(userAlbums);
@@ -160,6 +153,8 @@ begin
     begin
         ReadLn(albumDataFile, userAlbums[i].name);
         ReadLn(albumDataFile, userAlbums[i].artist);
+        ReadLn(albumDataFile, userAlbums[i].albumArt.imagePath);
+        userAlbums[i].albumArt.image := LoadBitmap(userAlbums[i].albumArt.imagePath);
         ReadLn(albumDataFile, tempString);
         userAlbums[i].genre := MusicGenre(StrToInt(tempString));
         ReadLn(albumDataFile, tempString);
@@ -180,6 +175,8 @@ begin
         i +=1;
     end;
     Close(albumDataFile); // Close file once we're done with it
+    
+    ResetAlbumImageDefaults(userAlbums);
 
     // UI Buttons
     backButton.rectLocX := 600;
