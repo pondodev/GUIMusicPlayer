@@ -358,7 +358,7 @@ begin
 
     // Check if we're clicking on any of the UI buttons
     if (CheckButtonIsHovered(backButton)) and (MouseClicked(LeftButton)) then currentMenu := MainMenu;
-    if (CheckButtonIsHovered(playAlbumButton)) and (MouseClicked(LeftButton)) then currentTrack := 0;
+    if (CheckButtonIsHovered(playAlbumButton)) and (MouseClicked(LeftButton)) and (currentTrack = -1) then currentTrack := 0;
 
     // Play/pause music functionality
     if musicPaused then
