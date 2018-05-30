@@ -389,7 +389,7 @@ begin
     // NOTE: Both moving forwards or backwards out of the bounds of the album will
     //       force the program to stop all music playback
     // Move forward one track
-    if (CheckButtonIsHovered(nextTrackButton)) and (MouseClicked(LeftButton)) then
+    if ((CheckButtonIsHovered(nextTrackButton)) and (MouseClicked(LeftButton))) or (netMessage = 'NEXTTRACK') then
     begin
         if currentTrack = userAlbum.trackCount then
         begin
@@ -408,7 +408,7 @@ begin
     end;
 
     // Move backwards one track
-    if (CheckButtonIsHovered(previousTrackButton)) and (MouseClicked(LeftButton)) then
+    if ((CheckButtonIsHovered(previousTrackButton)) and (MouseClicked(LeftButton))) or (netMessage = 'PREVIOUSTRACK') then
     begin
         if currentTrack = 1 then
         begin
