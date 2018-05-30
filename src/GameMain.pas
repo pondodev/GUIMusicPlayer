@@ -352,6 +352,8 @@ end;
 
 // Handle all the inputs for the album menu here
 procedure CheckAlbumMenuInput(var currentMenu : MenuLocation; var currentTrack, userTrackSelection: Integer; var musicPaused : Boolean; userAlbum : Album; var backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, upButton, downButton, playTrackButton : UIButton);
+var
+    netMessage : String;
 begin
     ButtonHoverVisual(backButton);
     ButtonHoverVisual(playAlbumButton);
@@ -363,6 +365,9 @@ begin
     ButtonHoverVisual(downButton);
     ButtonHoverVisual(playTrackButton);
 
+    // Recieve any TCP messages
+    if TCPMessageReceived() then netMessage := ReadMessage(CONN);
+
     // Check if we're clicking on any of the UI buttons
     if (CheckButtonIsHovered(backButton)) and (MouseClicked(LeftButton)) then currentMenu := MainMenu;
     if (CheckButtonIsHovered(playAlbumButton)) and (MouseClicked(LeftButton)) and (currentTrack = -1) then currentTrack := 0;
@@ -371,11 +376,13 @@ begin
     if musicPaused then
     begin
         if (CheckButtonIsHovered(playButton)) and (MouseClicked(LeftButton)) then musicPaused := false;
+        if netMessage = 'PAUSE' then musicPaused := false;
         PauseMusic();
     end
     else
     begin
         if (CheckButtonIsHovered(pauseButton)) and (MouseClicked(LeftButton)) then musicPaused := true;
+        if netMessage = 'PAUSE' then musicPaused := true;
         ResumeMusic();
     end;
 
