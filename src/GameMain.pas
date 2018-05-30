@@ -35,6 +35,23 @@ type
     end;
     AlbumArray = Array of Album;
 
+// It's easier to have these variables exit in a global scope since we may need them when
+// using networked features
+const
+    CONN : Connection = nil;
+    PORT : Integer = 4000;
+
+// I seriously do not like how this locks up the ENTIRE program, but multi threaded 
+procedure OpenHost();
+begin
+    CreateTCPHost(PORT);
+    while CONN = nil do
+    begin
+        AcceptTCPConnection();
+        CONN := FetchConnection();
+    end;
+end;
+
 procedure DrawAlbumImage(_img : AlbumImage);
 begin
     FillRectangle(_img.rectColor, _img.rectLocX, _img.rectLocY, _img.rectWidth, _img.rectHeight);
@@ -142,7 +159,7 @@ begin
 end;
 
 // Load all the assets into the program before we continue. MUST BE CALLED FIRST THING!
-procedure LoadAssets(var userAlbums : AlbumArray; var backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, upButton, downButton, playTrackButton : UIButton);
+procedure LoadAssets(var userAlbums : AlbumArray; var backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, upButton, downButton, playTrackButton, startConnectionButton : UIButton);
 var
     tempString : String;
     albumDataFile : TextFile;
@@ -204,14 +221,17 @@ begin
     upButton := CreateUIButton(530, 10, 40, 25, ColorGrey, ColorBlack, 'Up');
     downButton := CreateUIButton(580, 10, 40, 25, ColorGrey, ColorBlack, 'Down');
     playTrackButton := CreateUIButton(530, 40, 90, 25, ColorGrey, ColorBlack, 'Play Track');
+    startConnectionButton := CreateUIButton(15, 450, 140, 20, ColorGrey, ColorBlack, 'Start Connection');
 end;
 
 // Handle all drawing for the main menu here
-procedure DrawMainMenu(userAlbums : AlbumArray; albumSelection : Integer);
+procedure DrawMainMenu(userAlbums : AlbumArray; albumSelection : Integer; startConnectionButton : UIButton);
 var
     i : Integer;
     infoText : String;
 begin
+    DrawUIButton(startConnectionButton);
+
     // Show the user if they have hovered over an album and are able to click it
     if albumSelection >= 0 then
     begin
@@ -242,10 +262,14 @@ begin
 end;
 
 // Handle all inputs for the main menu here
-procedure CheckMainMenuInput(userAlbums : AlbumArray; var albumSelection : Integer; var currentMenu : MenuLocation);
+procedure CheckMainMenuInput(userAlbums : AlbumArray; var albumSelection : Integer; var currentMenu : MenuLocation; var startConnectionButton : UIButton);
 var
     i : Integer;
 begin
+    ButtonHoverVisual(startConnectionButton);
+
+    if (CheckButtonIsHovered(startConnectionButton)) and (MouseClicked(LeftButton)) then OpenHost();
+
     albumSelection := -1;
     i := 0;
     while i <= High(userAlbums) do
@@ -417,14 +441,14 @@ var
     albumSelection, i, a : Integer;
     currentMenu : MenuLocation;
     // Album Menu
-    backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, upButton, downButton, playTrackButton : UIButton;
+    backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, upButton, downButton, playTrackButton, startConnectionButton : UIButton;
     currentTrack, userTrackSelection : Integer;
     musicPaused : Boolean;
 begin
     OpenGraphicsWindow('playing music is my passion', 700, 500);
 
     // Initialise assets and variables
-    LoadAssets(userAlbums, backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, upButton, downButton, playTrackButton);
+    LoadAssets(userAlbums, backButton, playAlbumButton, playButton, pauseButton, nextTrackButton, previousTrackButton, upButton, downButton, playTrackButton, startConnectionButton);
     OpenAudio();
     currentMenu := MainMenu;
     albumSelection := 0;
@@ -440,8 +464,8 @@ begin
             currentTrack := -1;
             musicPaused := false;
             userTrackSelection := 0;
-            CheckMainMenuInput(userAlbums, albumSelection, currentMenu);
-            DrawMainMenu(userAlbums, albumSelection);
+            CheckMainMenuInput(userAlbums, albumSelection, currentMenu, startConnectionButton);
+            DrawMainMenu(userAlbums, albumSelection, startConnectionButton);
         end
         else if currentMenu = AlbumMenu then
         begin
