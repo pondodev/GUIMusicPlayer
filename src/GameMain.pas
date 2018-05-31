@@ -41,7 +41,8 @@ const
     CONN : Connection = nil;
     PORT : Integer = 4000;
 
-// I seriously do not like how this locks up the ENTIRE program, but multi threaded 
+// I seriously do not like how this locks up the ENTIRE program, but multi thread
+// operations just won't work for me man
 procedure OpenHost();
 begin
     CreateTCPHost(PORT);
@@ -156,6 +157,26 @@ begin
     result.rectColor := rectColor;
     result.outlineColor := outlineColor;
     result.labelText := labelText;
+end;
+
+// We use this function to create a string that we can use to send the album's information across the network.
+// Is this a good solution? No. Does it work? Most of the time. Is that good enough? Yup.
+function ConstructAlbumNetInfo(alb : Album) : String;
+var
+    temp : String;
+    i : Integer;
+begin
+    result := alb.name;
+    result += '|' + alb.artist;
+    WriteStr(temp, alb.genre);
+    result += '|' + temp;
+    result += '|' + IntToStr(alb.trackCount);
+    i := 0;
+    while i < alb.trackCount do
+    begin
+        result += '|' + alb.tracks[i].name;
+        i += 1;
+    end;
 end;
 
 // Load all the assets into the program before we continue. MUST BE CALLED FIRST THING!
@@ -283,7 +304,15 @@ begin
         ) then albumSelection := i;
 
         // Check if the album that is being hovered over has been clicked
-        if (albumSelection >= 0) and (MouseClicked(LeftButton)) then currentMenu := AlbumMenu;
+        if (albumSelection >= 0) and (MouseClicked(LeftButton)) then
+        begin
+            // If we're connected to a client we wanna send them all the album info
+            if CONN <> nil then
+            begin
+                SendTCPMessage(ConstructAlbumNetInfo(userAlbums[albumSelection]), CONN);
+            end;
+            currentMenu := AlbumMenu;
+        end;
 
         i += 1;
     end;
