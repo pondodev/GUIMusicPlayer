@@ -1,5 +1,5 @@
 program GameMain;
-uses SwinGame, sgTypes, math, sysutils, Crt;
+uses SwinGame, sgTypes, math, sysutils, Crt, strutils;
 
 type
     AlbumImage = record
@@ -394,8 +394,14 @@ begin
     ButtonHoverVisual(downButton);
     ButtonHoverVisual(playTrackButton);
 
+    netMessage := '';
+
     // Recieve any TCP messages
     if TCPMessageReceived() then netMessage := ReadMessage(CONN);
+    if netMessage <> '' then WriteLn(netMessage);
+
+    if ExtractDelimited(1, netMessage, ['|']) = 'VOLUME' then
+        SetMusicVolume(StrToFloat(ExtractDelimited(2, netMessage, ['|'])));
 
     // Check if we're clicking on any of the UI buttons
     if (CheckButtonIsHovered(backButton)) and (MouseClicked(LeftButton)) then currentMenu := MainMenu;
